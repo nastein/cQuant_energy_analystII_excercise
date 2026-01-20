@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 main.py — cQuant programming exercise 
 
@@ -9,7 +8,7 @@ Required packages are in requirements.txt
 They can be installed using pip install -r requirements.txt
 
 How to use:
-- Put the downloaded data file(s) in ./data
+- Put the downloaded data file(s) in ./data/raw
 - Fill in the TASK sections once you see the PDF
 - All outputs go to ./output (CSVs + PNGs)
 """
@@ -35,11 +34,11 @@ def ensure_dirs():
 
 
 def load_data(filename):
-    print('Reading data from f"{filename}" and transforming to dataframe:')
-    return pd.read_csv(filename)
+    print(f'Reading data from {filename} and transforming to dataframe:')
+    return pd.read_csv(RAW_DIR/f"{filename}")
 
 
-def save_table(df: pd.DataFrame, name: str):
+def save_table(df, name):
     df.to_csv(TABLE_DIR / f"{name}.csv", index=False)
 
 
@@ -51,7 +50,7 @@ def save_fig(filename):
 
 def main():
     ensure_dirs()
-    #df = load_data()
+    #df = load_data('')
 
     # =========
     # QUICK AUDIT (optional but helpful)
