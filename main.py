@@ -37,21 +37,6 @@ def ensure_dirs():
     SPOT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def load_data(filename):
-    print(f'Reading data from {filename} and transforming to dataframe:')
-    return pd.read_csv(RAW_DIR/f"{filename}")
-
-
-def save_table(df, name):
-    df.to_csv(TABLE_DIR / f"{name}.csv", index=False)
-
-
-def save_fig(filename):
-    plt.tight_layout()
-    plt.savefig(FIG_DIR / f"{filename}.png", dpi=175, bbox_inches="tight")
-    plt.close()
-
-
 def main():
     ensure_dirs()
 
