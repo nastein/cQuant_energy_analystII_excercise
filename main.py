@@ -155,6 +155,7 @@ def main():
     #I was not given the units of (Price) could be $/Mwh, or just $, so I will not assume one
 
     fig, ax = plt.subplots(1,1,figsize=(12,5))
+    df_monthly
     df_monthly[df_monthly["SettlementPoint"].str.startswith("HB_", na=False)].groupby("SettlementPoint")["Price"].plot(ax=ax)
 
     ax.set_ylabel("Price")
@@ -163,7 +164,7 @@ def main():
     ax.tick_params(axis='x', labelrotation=45)
 
     filename = "SettlementHubAveragePriceByMonth.png"
-    plt.savefig(FIG_DIR / f"{filename}.png", dpi=175, bbox_inches="tight")
+    plt.savefig(FIG_DIR / f"{filename}", dpi=175, bbox_inches="tight")
 
     fig, ax = plt.subplots(1,1,figsize=(12,5))
     df_monthly[df_monthly["SettlementPoint"].str.startswith("LZ_", na=False)].groupby("SettlementPoint")["Price"].plot(ax=ax)
@@ -174,14 +175,15 @@ def main():
     ax.legend()
     ax.tick_params(axis='x', labelrotation=45)
 
-    filename = "LoadZoneAveragePriceByMonth"
-    plt.savefig(FIG_DIR / f"{filename}.png", dpi=175, bbox_inches="tight")
+    filename = "LoadZoneAveragePriceByMonth.png"
+    plt.savefig(FIG_DIR / f"{filename}", dpi=175, bbox_inches="tight")
 
 
     #========
     #Bonus – Volatility Plots
     #========
     #decided to use seaborn as matplotlib make bar charts difficult
+    plt.figure()
     sns.barplot(data=volatility,x="Year",y="HourlyVolatility",hue="SettlementPoint")
     plt.tight_layout()
     plt.legend()
