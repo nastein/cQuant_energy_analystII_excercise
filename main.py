@@ -17,7 +17,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import statsmodels
+from statsmodels.tsa.seasonal import seasonal_decompose
 import seaborn as sns 
 
 
@@ -29,12 +29,14 @@ OUT_DIR = Path("output")
 TABLE_DIR = OUT_DIR / "tables"
 FIG_DIR = OUT_DIR / "figures"
 SPOT_DIR = OUT_DIR / "formattedSpotHistory"
+PROF_DIR = OUT_DIR / "hourlyShapeProfiles"
 
 
 def ensure_dirs():
     TABLE_DIR.mkdir(parents=True, exist_ok=True)
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     SPOT_DIR.mkdir(parents=True, exist_ok=True)
+    PROF_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def main():
@@ -188,8 +190,65 @@ def main():
     filename="SettlementHubHourlyVolatility.png"
     plt.savefig(FIG_DIR/ f"{filename}", dpi=175, bbox_inches="tight")
 
+    #======
+    #Bonus - Hourly shape profile comparison
+    #======
+    #Add month, day of week, and hour columns to our dataframe
+    df["Month"] = df["Date"].dt.month
+    df["DayOfWeek"] = df["Date"].dt.dayofweek   # Monday=0
+    df["Hour"] = df["Date"].dt.hour
+
+    #Now for each settlement point, month, day of week, and hour
+    #compute the average price
+    hourly_avg = df.groupby(['SettlementPoint', 'Month', 'DayOfWeek', 'Hour'])["Price"].mean().reset_index()
+
+    #Now I want to create a new column called hourlyshape
+    #This should basically divide by the average over the 24 hours
+    #for a given settlement point, month, day of week
+    hourly_avg["HourlyShape"] = hourly_avg["Price"]/hourly_avg.groupby(['SettlementPoint', 'Month', 'DayOfWeek'])["Price"].transform("mean")
+
+    #Since a way to format these tables was not given I'm going to
+    #Format them in the same way as the csv files that are fed into
+    #the cQuant models, i.e. use a pivot table again!
+    pivot2 = hourly_avg.pivot_table(index = ["SettlementPoint", "Month", "DayOfWeek"], columns = "Hour", values = "HourlyShape")
+
+    pivot2.columns = [f"X{h+1}" for h in pivot2.columns]
+    pivot2.reset_index(inplace=True)
+
+    for sp, g in pivot2.groupby("SettlementPoint"):
+        filename = f"profile_{sp}.csv"
+        g.to_csv(PROF_DIR/f"{filename}",index=False)
+
 
     print("Done. Outputs saved to:", OUT_DIR.resolve())
+
+    #======
+    #Bonus - Open Ended Analysis
+    #======
+    #I did not get to complete this section.
+    #What I wanted to do was do some sort of seasonality analysis
+    #i.e. find out seasonal patterns + long term trends + anomalies
+    #I was going to use the statsmodel seasonal_decompose
+
+
+    df_analysis = df.copy()
+    #make a dataframe where I have the hourly price and each column is the SP
+    df_analysis_sp = df_analysis.groupby(['Date','SettlementPoint'])['Price'].min().unstack('SettlementPoint').sort_index()
+
+    #Drop na because statsmodel doesn't do well with this
+    df_analysis_sp.dropna(axis="columns",inplace=True)
+
+    #For each settlement point decompose using an additive model with a 24 hour period
+    decompositions = {}
+    for sp in df_analysis_sp.columns:
+        result = seasonal_decompose(df_analysis_sp[sp],model='add',period=24)
+        decompositions[sp] = result
+
+    #I wanted to separate out 24 hour cycles, seasonal cycles, as well as
+    #Identify anomolies where extreme weather or political events
+    #caused prices to change by large amounts, but I couldn't get things
+    #to work quickly enough, not sure if seasonal_decompose is good
+    #for things with  multiple periodic cycles?
 
 
 if __name__ == "__main__":
