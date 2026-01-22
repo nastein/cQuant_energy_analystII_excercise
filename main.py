@@ -160,10 +160,6 @@ def main():
     df_monthly
     df_monthly[df_monthly["SettlementPoint"].str.startswith("HB_", na=False)].groupby("SettlementPoint")["Price"].plot(ax=ax)
 
-    print(df_monthly)
-    print(df_monthly.index)
-    print(df_monthly.index.dtype)
-
     ax.set_ylabel("Price")
     ax.set_xlabel("Date")
     ax.legend()
